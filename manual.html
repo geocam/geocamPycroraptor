@@ -1,0 +1,58 @@
+<h1>Pyraptord Manual</h1>
+
+<h3>Commands</h3>
+
+<pre>
+get VAR1 VAR2 ...
+
+  Returns the values of the specified variables in the form of a dict.
+  Each key/value pair in the dict is the variable name and value for
+  one of the specified variables.
+
+  $ get status.KmlRenderer
+  ["response", null, "ok", {"status.KmlRenderer": {"status": "signalExit", ...}}]
+
+kill TASK1 TASK2 ..
+
+  Alias for 'stop'.
+
+run TASK1 TASK2 ...
+
+  Alias for 'start'.
+
+set VAR VALUE
+
+  Set value of VAR.  Returns null.
+
+  $ set settings.tasks.KmlRenderer.workingDir "/tmp"
+
+start TASK1 TASK2 ...
+
+  Start specified tasks, or '-a' for all tasks. Returns null.
+
+  $ start KmlRenderer SyncClient
+  $ start -a
+
+stop TASK1 TASK2 ...
+
+  Stop specified tasks, ar '-a' for all tasks.  Returns null.
+
+  $ stop KmlRenderer SyncClient
+  $ stop -a
+
+sub VAR
+
+  Subscribe to be notified when VAR changes.  [Not implemented yet.]
+
+  $ sub settings
+  $ sub status.KmlRenderer
+  $ sub console.KmlRenderer
+
+update VAR VALUEDICT
+
+  Set attributes of the specified variable, which must be a dict.
+  Attributes specified in the VALUEDICT overwrite existing attributes in
+  VAR.
+
+  $ update settings.tasks.KmlRenderer {cmd:"KmlRenderer",workingDir:"/tmp"}
+</pre>
