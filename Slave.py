@@ -6,7 +6,6 @@
 
 import sys
 
-
 from geocamPycroraptor.Printable import Printable
 from geocamPycroraptor.PycroEncoder import PycroEncoder
 from geocamPycroraptor import anyjson as json
@@ -42,10 +41,10 @@ class Slave(Printable):
         self.write('get status -a\n')
 
     def handleLine(self, conn, text):
-        json = json.loads(text)
-        print 'Slave: handleLine:', json
-        if json[0] == 'status':
-            _, taskName, status = json
+        cmd = json.loads(text)
+        print 'Slave: handleLine:', cmd
+        if cmd[0] == 'status':
+            _, taskName, status = cmd
             self.handleStatus(taskName, status)
         else:
             pass # nothing to do for other message types yet

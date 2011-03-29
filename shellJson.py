@@ -4,7 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import re, json
+import re
 import geocamPycroraptor.exceptions
 from geocamPycroraptor import anyjson as json
 
