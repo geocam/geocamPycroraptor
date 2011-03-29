@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# __BEGIN_LICENSE__
+# Copyright (C) 2008-2010 United States Government as represented by
+# the Administrator of the National Aeronautics and Space Administration.
+# All Rights Reserved.
+# __END_LICENSE__
 
 # used this for debugging an intermittent problem with connecting
 # to pyraptord over tcp.  the problem seems to be gone now but
