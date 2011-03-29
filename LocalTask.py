@@ -9,7 +9,7 @@ import re
 import shlex
 import errno
 
-from irgCom.SharedScheduler import scheduler
+from geocamPycroCom.SharedScheduler import scheduler
 
 from geocamPycroraptor.ExpandVariables import expandVal
 from geocamPycroraptor import Log

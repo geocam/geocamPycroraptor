@@ -2,8 +2,8 @@
 import optparse, sys, code, platform, os
 
 from cStringIO import StringIO
-from irgCom.Dispatcher import Dispatcher
-from irgCom.SharedScheduler import scheduler, ExitSchedulerLoop
+from geocamPycroCom.Dispatcher import Dispatcher
+from geocamPycroCom.SharedScheduler import scheduler, ExitSchedulerLoop
 from geocamPycroraptor import commandLineOptions
 from geocamPycroraptor.DaemonProxy import DaemonProxy
 from geocamPycroraptor import anyjson as json

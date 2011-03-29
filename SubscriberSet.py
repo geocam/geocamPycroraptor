@@ -1,5 +1,5 @@
 
-from irgCom.WeakSet import WeakSet
+from geocamPycroCom.WeakSet import WeakSet
 
 from geocamPycroraptor.PycroEncoder import PycroEncoder
 from geocamPycroraptor.printTraceback import printTraceback

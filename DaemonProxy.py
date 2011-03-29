@@ -1,7 +1,7 @@
 
 import optparse, imp, sys, traceback, socket, os, platform, time
-from irgCom.SharedScheduler import scheduler
-from irgCom.Dispatcher import Dispatcher
+from geocamPycroCom.SharedScheduler import scheduler
+from geocamPycroCom.Dispatcher import Dispatcher
 from geocamPycroraptor import commandLineOptions
 from geocamPycroraptor.Printable import Printable
 from geocamPycroraptor import anyjson as json
@@ -39,7 +39,7 @@ class DaemonProxy:
         if not self._opened:
             if self._opts.notificationService:
                 self._dispatcher.connectToNotificationService(self._opts.notificationService,
-                                                              serviceHandler=self.irgComHandleService)
+                                                              serviceHandler=self.comHandleService)
                 self._dispatcher.findServices(self._opts.notificationService)
             if self._opts.daemons:
                 self._connectDaemon(self._opts.daemons[0])
@@ -49,17 +49,17 @@ class DaemonProxy:
         if not self._conns.has_key(endpoint):
             newConn = (self._dispatcher.connect
                        (endpoint,
-                        connectHandler = self.irgComHandleConnect,
+                        connectHandler = self.comHandleConnect,
                         lineHandler = self.handleLine))
             self._conns[endpoint] = newConn
             if len(self._conns) == 1:
                 self._currentConn = newConn
 
-    def irgComHandleService(self, finder, serviceName, serviceEvent):
+    def comHandleService(self, finder, serviceName, serviceEvent):
         if serviceName.startswith('pyraptord'):
             self._connectDaemon(serviceEvent)
 
-    def irgComHandleConnect(self, sock):
+    def comHandleConnect(self, sock):
         # asyncore should set connected flag earlier -- avoid infinite loop
         sock.connected = True
         if self._connectHandler:

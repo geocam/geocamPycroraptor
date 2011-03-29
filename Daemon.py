@@ -8,7 +8,7 @@ import signal
 import errno
 import re
 
-from irgCom.SharedScheduler import scheduler
+from geocamPycroCom.SharedScheduler import scheduler
 
 from geocamPycroraptor.ConfigDict import ConfigDict
 from geocamPycroraptor.LocalTask import LocalTask
@@ -439,9 +439,9 @@ class Daemon:
         else:
             return (0, 'pyraptord does not appear to be running -- pid file %s' % pidFileName)
 
-    def irgComConnectHandler(self, sock):
+    def comConnectHandler(self, sock):
         if self._opts.logComm:
-            print 'connected to client on irgCom endpoint "%s"' % sock.endpoint
+            print 'connected to client on geocamPycroCom endpoint "%s"' % sock.endpoint
         self.writeObject(sock, ['name', self._dispatcher._moduleName])
 
     def getStatusUrl(self, taskName):
@@ -563,8 +563,8 @@ class Daemon:
         else:
             print '[there is no startup group]'
 
-        # initialize irgCom
-        from irgCom.Dispatcher import Dispatcher
+        # initialize geocamPycroCom
+        from geocamPycroCom.Dispatcher import Dispatcher
         moduleName = 'pyraptord-%s-%d' % (self._opts.name, os.getpid())
         self._dispatcher = Dispatcher(moduleName=moduleName)
 
@@ -583,7 +583,7 @@ class Daemon:
             self._dispatcher.connectToNotificationService(self._opts.notificationService)
         for endpoint in self._opts.listenEndpoints:
             self._dispatcher.listen(endpoint,
-                                    connectHandler=self.irgComConnectHandler,
+                                    connectHandler=self.comConnectHandler,
                                     lineHandler=self.commandHandler)
         if self._opts.notificationService:
             self._dispatcher.findServices(self._opts.notificationService,
