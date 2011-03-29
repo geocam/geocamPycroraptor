@@ -2,7 +2,7 @@
 import os, optparse, imp
 import re
 import platform
-from pycroraptor import settings
+from geocamPycroraptor import settings
 
 DEFAULT_SETTINGS_FILE = os.environ.get('PYCRORAPTOR_SETTINGS_FILE', None)
 DEFAULT_ENDPOINT = os.environ.get('PYCRORAPTOR_ENDPOINT', 'tcp:localhost:8085')
@@ -30,7 +30,7 @@ def getOptParser():
 def readSettings(settingsFileName):
     if not os.path.lexists(settingsFileName):
         raise IOError('settings file "%s" does not exist' % settingsFileName)
-    userSettings = imp.load_source('pycroraptor.userSettings', settingsFileName)
+    userSettings = imp.load_source('geocamPycroraptor.userSettings', settingsFileName)
     for k, v in vars(userSettings).iteritems():
         setattr(settings, k, v)
 

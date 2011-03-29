@@ -2,9 +2,9 @@
 import os
 import sys
 
-from pycroraptor.Printable import Printable
-from pycroraptor.SubscriberSet import SubscriberSet
-from pycroraptor.BaseTask import BaseTask
+from geocamPycroraptor.Printable import Printable
+from geocamPycroraptor.SubscriberSet import SubscriberSet
+from geocamPycroraptor.BaseTask import BaseTask
 
 class RemoteTask(BaseTask):
     def __init__(self, name, parent, slave):

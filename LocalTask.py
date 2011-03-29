@@ -12,11 +12,11 @@ import errno
 
 from irgCom.SharedScheduler import scheduler
 
-from pycroraptor.ExpandVariables import expandVal
-from pycroraptor import Log
-from pycroraptor.Stdout import Stdout
-from pycroraptor.signals import SIG_VERBOSE
-from pycroraptor.BaseTask import BaseTask
+from geocamPycroraptor.ExpandVariables import expandVal
+from geocamPycroraptor import Log
+from geocamPycroraptor.Stdout import Stdout
+from geocamPycroraptor.signals import SIG_VERBOSE
+from geocamPycroraptor.BaseTask import BaseTask
 
 class LocalTask(BaseTask):
     def __init__(self, name, parent):

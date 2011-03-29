@@ -3,8 +3,8 @@ import optparse, imp, sys, traceback, socket, os, platform, time
 import simplejson
 from irgCom.SharedScheduler import scheduler
 from irgCom.Dispatcher import Dispatcher
-from pycroraptor import commandLineOptions
-from pycroraptor.Printable import Printable
+from geocamPycroraptor import commandLineOptions
+from geocamPycroraptor.Printable import Printable
 
 class DaemonProxy:
     """Example usage: p = DaemonProxy(); p.start('bc')"""

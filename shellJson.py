@@ -1,6 +1,6 @@
 
 import re, simplejson
-import pycroraptor.exceptions
+import geocamPycroraptor.exceptions
 
 JSON_RESERVED_WORDS = dict.fromkeys(['null'])
 
@@ -22,7 +22,7 @@ def parseTerm(s):
         try:
             obj = simplejson.loads(s)
         except ValueError, err:
-            raise pycroraptor.exceptions.SyntaxError(*err.args)
+            raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
         else:
             if isinstance(obj, str):
                 # quote the string to retain distinction with bareword
@@ -36,7 +36,7 @@ def parseShellJsonShell(cmd):
         while True:
             try:
                 parsedHead = parseTerm(head)
-            except pycroraptor.exceptions.SyntaxError:
+            except geocamPycroraptor.exceptions.SyntaxError:
                 if cmd:
                     head2, wspace2, cmd = trisplit(cmd)
                     head = head + wspace + head2
@@ -52,7 +52,7 @@ def parseShellJsonStrict(cmd):
     try:
         return simplejson.loads(cmd)
     except ValueError, err:
-        raise pycroraptor.exceptions.SyntaxError(*err.args)
+        raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
 
 def parseShellJson(cmd):
     cmd = cmd.strip()
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     print parseShellJson('kill -a')
     try:
         print parseShellJson('foo {"zoo":')
-    except pycroraptor.exceptions.SyntaxError:
+    except geocamPycroraptor.exceptions.SyntaxError:
         print 'last call raised error as expected'
     else:
         print 'oops, how did that parse?'

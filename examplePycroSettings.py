@@ -1,6 +1,6 @@
 
 import os
-from pycroraptor.ConfigHelper import ConfigDict, defaultProcessConfig
+from geocamPycroraptor.ConfigHelper import ConfigDict, defaultProcessConfig
 
 logDir = '/tmp/pyraptord/logs'
 

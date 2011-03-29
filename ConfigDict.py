@@ -1,5 +1,5 @@
 
-from pycroraptor.Printable import Printable
+from geocamPycroraptor.Printable import Printable
 
 class ConfigDict(Printable):
     def __init__(self, updateDict=None, **kwargs):

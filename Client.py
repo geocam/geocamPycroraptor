@@ -4,8 +4,8 @@ import simplejson
 from cStringIO import StringIO
 from irgCom.Dispatcher import Dispatcher
 from irgCom.SharedScheduler import scheduler, ExitSchedulerLoop
-from pycroraptor import commandLineOptions
-from pycroraptor.DaemonProxy import DaemonProxy
+from geocamPycroraptor import commandLineOptions
+from geocamPycroraptor.DaemonProxy import DaemonProxy
 
 class Client:
     def __init__(self, opts=None):

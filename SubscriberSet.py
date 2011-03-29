@@ -3,8 +3,8 @@ import simplejson
 
 from irgCom.WeakSet import WeakSet
 
-from pycroraptor.PycroEncoder import PycroEncoder
-from pycroraptor.printTraceback import printTraceback
+from geocamPycroraptor.PycroEncoder import PycroEncoder
+from geocamPycroraptor.printTraceback import printTraceback
 
 class SubscriberSet(WeakSet):
     def write(self, obj):

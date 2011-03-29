@@ -1,6 +1,6 @@
 
-from pycroraptor.Printable import Printable
-from pycroraptor.ConfigDict import ConfigDict
+from geocamPycroraptor.Printable import Printable
+from geocamPycroraptor.ConfigDict import ConfigDict
 
 defaultProcessConfig = ConfigDict(cmd = '$name',
                                   workingDir = '/tmp',

@@ -11,17 +11,17 @@ import simplejson
 
 from irgCom.SharedScheduler import scheduler
 
-from pycroraptor.ConfigDict import ConfigDict
-from pycroraptor.LocalTask import LocalTask
-from pycroraptor.RemoteTask import RemoteTask
-from pycroraptor import ExpandVariables
-from pycroraptor import Log, commandLineOptions
-import pycroraptor.exceptions
-from pycroraptor import settings
-from pycroraptor.shellJson import parseShellJson
-from pycroraptor.signals import SIG_VERBOSE
-from pycroraptor.PycroEncoder import StatusGetter, PycroEncoder
-from pycroraptor.Slave import Slave
+from geocamPycroraptor.ConfigDict import ConfigDict
+from geocamPycroraptor.LocalTask import LocalTask
+from geocamPycroraptor.RemoteTask import RemoteTask
+from geocamPycroraptor import ExpandVariables
+from geocamPycroraptor import Log, commandLineOptions
+import geocamPycroraptor.exceptions
+from geocamPycroraptor import settings
+from geocamPycroraptor.shellJson import parseShellJson
+from geocamPycroraptor.signals import SIG_VERBOSE
+from geocamPycroraptor.PycroEncoder import StatusGetter, PycroEncoder
+from geocamPycroraptor.Slave import Slave
 
 CLEANUP_PERIOD = 0.2
 WRITE_STATUS_PERIOD = 5.0
@@ -128,18 +128,18 @@ class Daemon:
                     self._tasks[taskName] = newTask
             return self._tasks[taskName]
         else:
-            raise pycroraptor.exceptions.UnknownTask(taskName)
+            raise geocamPycroraptor.exceptions.UnknownTask(taskName)
 
     def expandGroup1(self, taskOrGroup, tabuList=[]):
         if taskOrGroup in tabuList:
-            raise pycroraptor.exceptions.GroupContainsItself(taskOrGroup)
+            raise geocamPycroraptor.exceptions.GroupContainsItself(taskOrGroup)
         elif self.isGroup(taskOrGroup):
             return True, self._env['settings']['groups'][taskOrGroup]
         elif (self.isTask(taskOrGroup)
               or isinstance(taskOrGroup, (int, float))):
             return False, [taskOrGroup]
         else:
-            raise pycroraptor.exceptions.UnknownTask(taskOrGroup)
+            raise geocamPycroraptor.exceptions.UnknownTask(taskOrGroup)
 
     def expandGroup(self, taskOrGroup, tabuList=[]):
         isExpanded, expansionResult = self.expandGroup1(taskOrGroup, tabuList)
@@ -175,7 +175,7 @@ class Daemon:
             daemonLevelHandler = getattr(self, daemonLevelName)
             return daemonLevelHandler(req)
         else:
-            raise pycroraptor.exceptions.UnknownCommand('unknown command "%s"' % cmd)
+            raise geocamPycroraptor.exceptions.UnknownCommand('unknown command "%s"' % cmd)
 
     def dispatchCommandParse(self, conn, cmd):
         args = parseShellJson(cmd)
@@ -199,7 +199,7 @@ class Daemon:
             print >>sys.stderr, ('%s.%s: %s' % (errClass.__module__,
                                                 errClass.__name__,
                                                 str(errObject)))
-            if isinstance(errObject, pycroraptor.exceptions.PycroWarning):
+            if isinstance(errObject, geocamPycroraptor.exceptions.PycroWarning):
                 errLevel = 'warning'
             else:
                 errLevel = 'error'
@@ -223,7 +223,7 @@ class Daemon:
 
     def command_start(self, req):
         if self._shuttingDown:
-            raise pycroraptor.exceptions.InvalidCommand("can't run tasks during shutdown")
+            raise geocamPycroraptor.exceptions.InvalidCommand("can't run tasks during shutdown")
         taskArgs = req.args[1:]
         if taskArgs and isinstance(taskArgs[-1], dict):
             params = taskArgs.pop(-1)
@@ -240,7 +240,7 @@ class Daemon:
                 msg = 'task %s already running' % tasks[0].name
             else:
                 msg = 'all tasks already running'
-            raise pycroraptor.exceptions.NothingToDo(msg)
+            raise geocamPycroraptor.exceptions.NothingToDo(msg)
 
     def command_run(self, req):
         """run is an alias for start"""
@@ -263,7 +263,7 @@ class Daemon:
                 msg = 'task %s not running' % tasks[0].name
             else:
                 msg = 'all tasks already stopped'
-            raise pycroraptor.exceptions.NothingToDo(msg)
+            raise geocamPycroraptor.exceptions.NothingToDo(msg)
 
     def command_kill(self, req):
         """kill is an alias for stop"""
@@ -304,7 +304,7 @@ class Daemon:
     def command_stdin(self, req):
         taskName, quotedText = req.args[1:]
         if not (isinstance(quotedText, str) and re.match('".*"', quotedText)):
-            raise pycroraptor.exceptions.SyntaxError('<text> arg to stdin command must be a quoted string; instead got: %s' % quotedText)
+            raise geocamPycroraptor.exceptions.SyntaxError('<text> arg to stdin command must be a quoted string; instead got: %s' % quotedText)
         text = quotedText[1:-1]
         self.getTask(taskName).writeStdin(text)
 
@@ -343,7 +343,7 @@ class Daemon:
         if req.args[1] == 'status':
             return self.commandSubStatus(req)
         else:
-            raise pycroraptor.exceptions.SyntaxError('expected "status" after "sub"')
+            raise geocamPycroraptor.exceptions.SyntaxError('expected "status" after "sub"')
 
     def commandUnsubStatus(self, req):
         tasks = self.getTasks(req.args[2:])
@@ -355,7 +355,7 @@ class Daemon:
         if req.args[1] == 'status':
             return self.commandUnsubStatus(req)
         else:
-            raise pycroraptor.exceptions.SyntaxError('expected "status" after "unsub"')
+            raise geocamPycroraptor.exceptions.SyntaxError('expected "status" after "unsub"')
 
     def commandHandler(self, conn, cmd):
         if self._opts.logComm:
@@ -546,7 +546,7 @@ class Daemon:
             print 'running tasks in startup group "%s"' % self._opts.startupGroup
             try:
                 startupTasks = self.expandGroup(self._opts.startupGroup)
-            except pycroraptor.exceptions.UnknownTask, err:
+            except geocamPycroraptor.exceptions.UnknownTask, err:
                 print >>sys.stderr, ('could not run startup group "%s": %s'
                                      % (self._opts.startupGroup, err))
             else:

@@ -3,8 +3,8 @@ import sys
 
 import simplejson
 
-from pycroraptor.Printable import Printable
-from pycroraptor.PycroEncoder import PycroEncoder
+from geocamPycroraptor.Printable import Printable
+from geocamPycroraptor.PycroEncoder import PycroEncoder
 
 class Slave(Printable):
     def __init__(self, name, endpoint, dispatcher, logComm=True, statusHandler=None):

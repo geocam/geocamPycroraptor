@@ -5,8 +5,8 @@
 # the tester may still be useful.
 
 import os
-from pycroraptor.DaemonProxy import DaemonProxy
-from pycroraptor import commandLineOptions
+from geocamPycroraptor.DaemonProxy import DaemonProxy
+from geocamPycroraptor import commandLineOptions
 
 def handleLine(sock, line):
     print 'testProxy: line =', line

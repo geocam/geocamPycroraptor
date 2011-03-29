@@ -1,6 +1,6 @@
 
-from pycroraptor.Printable import Printable
-from pycroraptor.SubscriberSet import SubscriberSet
+from geocamPycroraptor.Printable import Printable
+from geocamPycroraptor.SubscriberSet import SubscriberSet
 
 class BaseTask(Printable):
     def __init__(self, name, parent):

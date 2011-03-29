@@ -1,8 +1,8 @@
 
 import simplejson
 
-from pycroraptor.ConfigDict import ConfigDict
-import pycroraptor.exceptions
+from geocamPycroraptor.ConfigDict import ConfigDict
+import geocamPycroraptor.exceptions
 
 class StatusGetter:
     def __init__(self, daemon):
@@ -10,7 +10,7 @@ class StatusGetter:
     def __getitem__(self, taskName):
         return self._daemon.getTask(taskName).status
     def __setitem__(self, taskName, val):
-        raise pycroraptor.exceptions.ImmutableObject('task status is immutable')
+        raise geocamPycroraptor.exceptions.ImmutableObject('task status is immutable')
     def asDict(self):
         allSettings = self._daemon._env['settings']
         allTaskSettings = allSettings['tasks']

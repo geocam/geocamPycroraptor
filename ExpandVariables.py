@@ -1,8 +1,8 @@
 
 import re, time
 from string import Template
-from pycroraptor.ShadowDict import ShadowDict
-import pycroraptor.exceptions
+from geocamPycroraptor.ShadowDict import ShadowDict
+import geocamPycroraptor.exceptions
 
 def camelCase(s):
     # FOO_BAR -> fooBar
@@ -54,7 +54,7 @@ def _dotLookup(key, env, write):
         except KeyError:
             raise KeyError(key)
     if write and not writable:
-        raise pycroraptor.exceptions.ImmutableObject(key)
+        raise geocamPycroraptor.exceptions.ImmutableObject(key)
     return namespace, allElts[-1]
 
 def getVariable(key, env):

@@ -2,7 +2,7 @@
 import os
 import datetime
 import re
-from pycroraptor.ExpandVariables import expandVal
+from geocamPycroraptor.ExpandVariables import expandVal
 
 UNIQUE_REGEX = r'\$\{unique\}|\$unique\b'
 
