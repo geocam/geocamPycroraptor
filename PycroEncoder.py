@@ -1,8 +1,7 @@
 
-import simplejson
-
 from geocamPycroraptor.ConfigDict import ConfigDict
 import geocamPycroraptor.exceptions
+from geocamPycroraptor import anyjson as json
 
 class StatusGetter:
     def __init__(self, daemon):
@@ -18,10 +17,10 @@ class StatusGetter:
         return dict(((k, self[k]) for k in allTaskNames
                      if self._daemon.isTask(k) and self[k] is not None))
 
-class PycroEncoder(simplejson.JSONEncoder):
+class PycroEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (ConfigDict, StatusGetter)):
             return obj.asDict()
         else:
-            return simplejson.JSONEncoder.default(self, obj)
+            return json.JSONEncoder.default(self, obj)
 

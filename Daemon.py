@@ -7,7 +7,6 @@ import time
 import signal
 import errno
 import re
-import simplejson
 
 from irgCom.SharedScheduler import scheduler
 
@@ -22,6 +21,7 @@ from geocamPycroraptor.shellJson import parseShellJson
 from geocamPycroraptor.signals import SIG_VERBOSE
 from geocamPycroraptor.PycroEncoder import StatusGetter, PycroEncoder
 from geocamPycroraptor.Slave import Slave
+from geocamPycroraptor import anyjson as json
 
 CLEANUP_PERIOD = 0.2
 WRITE_STATUS_PERIOD = 5.0
@@ -366,13 +366,13 @@ class Daemon:
         else:
             responseId = req.id
         response = ["response", responseId] + returnVal
-        jsonResponse = simplejson.dumps(response, cls=PycroEncoder)
+        jsonResponse = json.dumps(response, cls=PycroEncoder)
         if self._opts.logComm:
             print 'response:', jsonResponse
         conn.write(jsonResponse + '\n')
     
     def writeObject(self, conn, obj):
-        conn.write(simplejson.dumps(obj, cls=PycroEncoder) + '\n')
+        conn.write(json.dumps(obj, cls=PycroEncoder) + '\n')
 
     def iterTasks(self):
         return self._tasks.asDict().itervalues()

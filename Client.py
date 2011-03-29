@@ -1,11 +1,12 @@
 
 import optparse, sys, code, platform, os
-import simplejson
+
 from cStringIO import StringIO
 from irgCom.Dispatcher import Dispatcher
 from irgCom.SharedScheduler import scheduler, ExitSchedulerLoop
 from geocamPycroraptor import commandLineOptions
 from geocamPycroraptor.DaemonProxy import DaemonProxy
+from geocamPycroraptor import anyjson as json
 
 class Client:
     def __init__(self, opts=None):
@@ -78,7 +79,7 @@ class Client:
         if line.startswith('#'):
             return line
         else:
-            json = simplejson.loads(line)
+            json = json.loads(line)
             if (json and json[0] == 'response'):
                 response, lineId, returnCode = json[:3]
                 result = json[3:]

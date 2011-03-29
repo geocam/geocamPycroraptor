@@ -1,10 +1,10 @@
 
 import sys
 
-import simplejson
 
 from geocamPycroraptor.Printable import Printable
 from geocamPycroraptor.PycroEncoder import PycroEncoder
+from geocamPycroraptor import anyjson as json
 
 class Slave(Printable):
     def __init__(self, name, endpoint, dispatcher, logComm=True, statusHandler=None):
@@ -30,14 +30,14 @@ class Slave(Printable):
         self.conn.write(text)
 
     def writeObject(self, obj):
-        self.write(simplejson.dumps(obj, cls=PycroEncoder) + '\n')
+        self.write(json.dumps(obj, cls=PycroEncoder) + '\n')
 
     def handleConnect(self, conn):
         self.write('sub status -a\n')
         self.write('get status -a\n')
 
     def handleLine(self, conn, text):
-        json = simplejson.loads(text)
+        json = json.loads(text)
         print 'Slave: handleLine:', json
         if json[0] == 'status':
             _, taskName, status = json

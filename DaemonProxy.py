@@ -1,10 +1,10 @@
 
 import optparse, imp, sys, traceback, socket, os, platform, time
-import simplejson
 from irgCom.SharedScheduler import scheduler
 from irgCom.Dispatcher import Dispatcher
 from geocamPycroraptor import commandLineOptions
 from geocamPycroraptor.Printable import Printable
+from geocamPycroraptor import anyjson as json
 
 class DaemonProxy:
     """Example usage: p = DaemonProxy(); p.start('bc')"""
@@ -29,7 +29,7 @@ class DaemonProxy:
 
     def handleLine(self, sock, line):
         if self._responseIdToWaitFor != None:
-            msg = simplejson.loads(line)
+            msg = json.loads(line)
             if msg[0] == 'response' and msg[1] == self._responseIdToWaitFor:
                 self._lastMatchingMessage = msg
         if self._lineHandler:
@@ -77,7 +77,7 @@ class DaemonProxy:
         self._currentConn.write(cmdString+'\n')
 
     def sendObject(self, cmdObject):
-        self.send(simplejson.dumps(cmdObject))
+        self.send(json.dumps(cmdObject))
 
     def sendCommand(self, cmd):
         self.sendObject(['command', self._counter] + cmd)

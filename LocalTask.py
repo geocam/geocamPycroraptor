@@ -7,7 +7,6 @@ import pty
 import signal
 import re
 import shlex
-import simplejson
 import errno
 
 from irgCom.SharedScheduler import scheduler
@@ -17,6 +16,7 @@ from geocamPycroraptor import Log
 from geocamPycroraptor.Stdout import Stdout
 from geocamPycroraptor.signals import SIG_VERBOSE
 from geocamPycroraptor.BaseTask import BaseTask
+from geocamPycroraptor import anyjson as json
 
 class LocalTask(BaseTask):
     def __init__(self, name, parent):
@@ -51,7 +51,7 @@ class LocalTask(BaseTask):
 
     def _logText(self, obj):
         if self._tslineLogger:
-            self._tslineLogger.handleLine(Log.TimestampLine('pyr', 'n', simplejson.dumps(obj)))
+            self._tslineLogger.handleLine(Log.TimestampLine('pyr', 'n', json.dumps(obj)))
 
     def _runCmd(self, cmd):
         print 'runCmd: %s' % cmd

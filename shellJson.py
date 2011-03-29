@@ -1,6 +1,7 @@
 
-import re, simplejson
+import re, json
 import geocamPycroraptor.exceptions
+from geocamPycroraptor import anyjson as json
 
 JSON_RESERVED_WORDS = dict.fromkeys(['null'])
 
@@ -20,7 +21,7 @@ def parseTerm(s):
         return s
     else:
         try:
-            obj = simplejson.loads(s)
+            obj = json.loads(s)
         except ValueError, err:
             raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
         else:
@@ -50,7 +51,7 @@ def parseShellJsonShell(cmd):
 
 def parseShellJsonStrict(cmd):
     try:
-        return simplejson.loads(cmd)
+        return json.loads(cmd)
     except ValueError, err:
         raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
 
