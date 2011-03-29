@@ -31,7 +31,7 @@ def _expandVal0(val, env):
         return val
 
 def expandVal(val, env):
-    if isinstance(val, str):
+    if isinstance(val, (str, unicode)):
         expanded = _expandVal0(val, env)
         unescaped = re.sub('00DOLLAR00', '$', expanded)
         return unescaped

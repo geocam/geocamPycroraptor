@@ -79,10 +79,10 @@ class Client:
         if line.startswith('#'):
             return line
         else:
-            json = json.loads(line)
-            if (json and json[0] == 'response'):
-                response, lineId, returnCode = json[:3]
-                result = json[3:]
+            cmd = json.loads(line)
+            if (cmd and cmd[0] == 'response'):
+                response, lineId, returnCode = cmd[:3]
+                result = cmd[3:]
                 if returnCode == 'ok':
                     return self.makeOkResponseHumanReadable(result[0])
                 else:

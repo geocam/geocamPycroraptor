@@ -179,6 +179,7 @@ class Daemon:
 
     def dispatchCommandParse(self, conn, cmd):
         args = parseShellJson(cmd)
+        print 'dispatchCommandParse args=', args
         req = Request()
         req.conn = conn
         if args[0] == 'command':
@@ -210,7 +211,7 @@ class Daemon:
             return None, result
 
     def evalObject(self, val):
-        if isinstance(val, str):
+        if isinstance(val, (str, unicode)):
             if (val.startswith('"')
                 or val.startswith("'")):
                 # quoted string, strip quotes
@@ -303,7 +304,7 @@ class Daemon:
 
     def command_stdin(self, req):
         taskName, quotedText = req.args[1:]
-        if not (isinstance(quotedText, str) and re.match('".*"', quotedText)):
+        if not (isinstance(quotedText, (str, unicode)) and re.match('".*"', quotedText)):
             raise geocamPycroraptor.exceptions.SyntaxError('<text> arg to stdin command must be a quoted string; instead got: %s' % quotedText)
         text = quotedText[1:-1]
         self.getTask(taskName).writeStdin(text)

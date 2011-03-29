@@ -25,7 +25,7 @@ def parseTerm(s):
         except ValueError, err:
             raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
         else:
-            if isinstance(obj, str):
+            if isinstance(obj, (str, unicode)):
                 # quote the string to retain distinction with bareword
                 obj = '"%s"' % obj
             return obj
