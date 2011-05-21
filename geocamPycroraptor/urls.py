@@ -6,6 +6,8 @@
 
 from django.conf.urls.defaults import *
 
+from geocamPycroraptor import views
+
 urlpatterns = patterns('',
-    url(r'^$', 'views.index', name='index'),
+    url(r'^$', views.index, name='index'),
 )
