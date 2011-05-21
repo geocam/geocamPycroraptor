@@ -60,7 +60,7 @@ def _findUniqueFileAndSetSymLink(fnameTemplate, env):
                 return fname
         raise Exception('could not find unique log file name; exhausted counter at 9999')
     else:
-        return expandVal(fnameTemplate)
+        return expandVal(fnameTemplate, env)
 
 def openLogFromTemplate(fnameTemplate, env):
     fname = _findUniqueFileAndSetSymLink(fnameTemplate, env)
