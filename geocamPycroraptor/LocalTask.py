@@ -147,7 +147,10 @@ class LocalTask(BaseTask):
         for k, v in params.iteritems():
             self._env[k] = v # may want to remove these later
 
-        cmdArgs = shlex.split(self._getConfig('cmd'))
+        # without str() call, getConfig result is unicode in Python 2.7
+        # and shlex.split fails
+        cmdArgs = shlex.split(str(self._getConfig('cmd')))
+
         self._logBuffer = Log.LineBuffer()
         if self._env['log'] == None:
             self._logFile = None
@@ -185,7 +188,7 @@ class LocalTask(BaseTask):
         except OSError, oe:
             if oe.errno == errno.ENOENT:
                 startupError = "is executable '%s' in PATH? Popen call returned no such file or directory" % cmdArgs[0]
-        except Error, exc:
+        except Exception, exc:
             startupError = str(exc)
         else:
             startupError = None
