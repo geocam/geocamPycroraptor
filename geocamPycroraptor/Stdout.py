@@ -8,7 +8,8 @@ import sys
 import os
 import errno
 import traceback
-import asyncore
+
+from geocamPycroCom import asyncore # patched version
 
 class Stdout(asyncore.file_dispatcher):
     def __init__(self, childStdoutReadFd, logger, parentTask, streamName):
