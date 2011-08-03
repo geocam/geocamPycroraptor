@@ -163,8 +163,14 @@ class LocalTask(BaseTask):
         os.chdir(self._getConfig('workingDir'))
         childStdoutReadFd, childStdoutWriteFd = self._openpty()
         self._childStdout = Stdout(childStdoutReadFd, self._outLogger, self, 'stdout')
+        os.close(childStdoutReadFd) # close redundant fd after it is dup()'d by Stdout()
         childStderrReadFd, childStderrWriteFd = self._openpty()
         self._childStderr = Stdout(childStderrReadFd, self._errLogger, self, 'stderr')
+        os.close(childStderrReadFd)
+        allocatedFds = [self._childStdout._fileno, self._childStderr._fileno,
+                        childStdoutWriteFd, childStderrWriteFd]
+        allocatedFds.sort()
+        print 'allocated fds: %s' % allocatedFds
         childEnv = os.environ.copy()
         for k, v in self._getConfig('env').iteritems():
             if v == None:
