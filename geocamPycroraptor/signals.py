@@ -6,11 +6,11 @@
 
 import signal
 
-SIG_VERBOSE_CONFIG = [('HUP',  'hangup; e.g. tty was closed, unusual under pyraptord'),
-                      ('INT',  'interrupt; e.g. a Ctrl-C'),
-                      ('ILL',  'illegal instruction; e.g. corrupted binary'),
+SIG_VERBOSE_CONFIG = [('HUP', 'hangup; e.g. tty was closed, unusual under pyraptord'),
+                      ('INT', 'interrupt; e.g. a Ctrl-C'),
+                      ('ILL', 'illegal instruction; e.g. corrupted binary'),
                       ('ABRT', 'abort; e.g. failed assertion or uncaught exception'),
-                      ('BUS',  'bus error; e.g. array out of bounds'),
+                      ('BUS', 'bus error; e.g. array out of bounds'),
                       ('KILL', 'kill; e.g. pyraptord stop second attempt'),
                       ('SEGV', 'segmentation fault; e.g. dereferenced null pointer'),
                       ('PIPE', 'broken pipe; e.g. lost network connection'),
@@ -20,7 +20,7 @@ SIG_VERBOSE_CONFIG = [('HUP',  'hangup; e.g. tty was closed, unusual under pyrap
 SIG_VERBOSE = {}
 for name, verbose in SIG_VERBOSE_CONFIG:
     try:
-        sigNum = getattr(signal, 'SIG'+name)
+        sigNum = getattr(signal, 'SIG' + name)
     except AttributeError:
-        continue # doh, can't look up number for signal name on this platform
-    SIG_VERBOSE[sigNum] = dict(sigName = name, sigVerbose = verbose)
+        continue  # doh, can't look up number for signal name on this platform
+    SIG_VERBOSE[sigNum] = dict(sigName=name, sigVerbose=verbose)

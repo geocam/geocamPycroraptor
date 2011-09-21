@@ -5,10 +5,10 @@
 # __END_LICENSE__
 
 import sys
-import os
 import errno
 import traceback
 import asyncore
+
 
 class Stdout(asyncore.file_dispatcher):
     def __init__(self, childStdoutReadFd, logger, parentTask, streamName):
@@ -25,7 +25,7 @@ class Stdout(asyncore.file_dispatcher):
                 asyncore.file_dispatcher.close(self)
             except OSError, oe:
                 # we get these errors on broken pipe or file already closed, no problem
-                if oe.errno not in (errno.PIPE, errno.EBADF):
+                if oe.errno not in (errno.EPIPE, errno.EBADF):
                     raise oe
 
     def writable(self):
@@ -43,9 +43,9 @@ class Stdout(asyncore.file_dispatcher):
     def handle_error(self):
         errClass, errObject, errTB = sys.exc_info()[:3]
         traceback.print_tb(errTB)
-        print >>sys.stderr, '%s.%s: %s' % (errClass.__module__,
-                                           errClass.__name__,
-                                           errObject)
+        print >> sys.stderr, '%s.%s: %s' % (errClass.__module__,
+                                            errClass.__name__,
+                                            errObject)
         self.close()
         if errClass is KeyboardInterrupt:
             sys.exit(0)

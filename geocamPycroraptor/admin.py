@@ -4,4 +4,4 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.contrib import admin
+# from django.contrib import admin

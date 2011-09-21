@@ -4,4 +4,4 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.db import models
+# from django.db import models

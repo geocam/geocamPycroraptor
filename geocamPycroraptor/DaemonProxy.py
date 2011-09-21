@@ -4,33 +4,35 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import optparse, imp, sys, traceback, socket, os, platform, time
-from geocamPycroCom.SharedScheduler import scheduler
+import os
+import platform
+
 from geocamPycroCom.Dispatcher import Dispatcher
 from geocamPycroraptor import commandLineOptions
-from geocamPycroraptor.Printable import Printable
 from geocamPycroraptor import anyjson as json
+
 
 class DaemonProxy:
     """Example usage: p = DaemonProxy(); p.start('bc')"""
     def __init__(self, opts=None, dispatcher=None, lineHandler=None,
                  connectHandler=None, **kwargs):
         if dispatcher == None:
-            dispatcher = Dispatcher(moduleName = 'client-%s-%d' % (platform.node(), os.getpid()))
+            dispatcher = Dispatcher(moduleName='client-%s-%d' % (platform.node(), os.getpid()))
         if opts == None:
-            opts, args = commandLineOptions.getClientOptsArgs(['pyrterm'])
+            opts, _args = commandLineOptions.getClientOptsArgs(['pyrterm'])
         for k, v in kwargs.iteritems():
             setattr(opts, k, v)
         self._opts = opts
         self._lineHandler = lineHandler
         self._connectHandler = connectHandler
         self._dispatcher = dispatcher
-        serverLoc = opts.daemons[0].strip()
+        _serverLoc = opts.daemons[0].strip()
         self._conns = {}
         self._currentConn = None
         self._counter = 0
         self._responseIdToWaitFor = None
         self._opened = False
+        self._lastMatchingMessage = None
 
     def handleLine(self, sock, line):
         if self._responseIdToWaitFor != None:
@@ -49,13 +51,13 @@ class DaemonProxy:
             if self._opts.daemons:
                 self._connectDaemon(self._opts.daemons[0])
             self._opened = True
-            
+
     def _connectDaemon(self, endpoint):
-        if not self._conns.has_key(endpoint):
+        if not endpoint in self._conns:
             newConn = (self._dispatcher.connect
                        (endpoint,
-                        connectHandler = self.comHandleConnect,
-                        lineHandler = self.handleLine))
+                        connectHandler=self.comHandleConnect,
+                        lineHandler=self.handleLine))
             self._conns[endpoint] = newConn
             if len(self._conns) == 1:
                 self._currentConn = newConn
@@ -73,13 +75,15 @@ class DaemonProxy:
     def send(self, cmdString):
         if not (self._currentConn and self._currentConn.connected):
             self.open()
+
             def _check():
                 if self._currentConn.connected:
                     return True
                 else:
                     return None
+
             self._dispatcher.waitForResponse(_check)
-        self._currentConn.write(cmdString+'\n')
+        self._currentConn.write(cmdString + '\n')
 
     def sendObject(self, cmdObject):
         self.send(json.dumps(cmdObject))

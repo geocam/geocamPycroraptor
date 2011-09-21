@@ -4,7 +4,6 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import imp
 import sys
 import traceback
 import os
@@ -20,7 +19,7 @@ from geocamPycroraptor.LocalTask import LocalTask
 from geocamPycroraptor.RemoteTask import RemoteTask
 from geocamPycroraptor import ExpandVariables
 from geocamPycroraptor import Log, commandLineOptions
-import geocamPycroraptor.exceptions
+import geocamPycroraptor.errors
 from geocamPycroraptor import settings
 from geocamPycroraptor.shellJson import parseShellJson
 from geocamPycroraptor.signals import SIG_VERBOSE
@@ -28,8 +27,12 @@ from geocamPycroraptor.PycroEncoder import StatusGetter, PycroEncoder
 from geocamPycroraptor.Slave import Slave
 from geocamPycroraptor import anyjson as json
 
+# disable pylint warnings about setting attributes outside constructor
+# pylint: disable=W0201
+
 CLEANUP_PERIOD = 0.2
 WRITE_STATUS_PERIOD = 5.0
+
 
 class Request:
     def copy(self):
@@ -38,18 +41,20 @@ class Request:
             setattr(ret, k, v)
         return ret
 
+
 class Identifier:
     def __init__(self, name):
         self.name = name
+
 
 class Daemon:
     def __init__(self, opts):
         self._dotCounter = 0
         self._opts = opts
         self._localSettings, sharedSettings = ExpandVariables.splitSettings(settings)
-        sharedSettings._writable = True # mark as *not* an immutable object
-        self._env = dict(settings = sharedSettings,
-                         status = StatusGetter(self))
+        sharedSettings._writable = True  # mark as *not* an immutable object
+        self._env = dict(settings=sharedSettings,
+                         status=StatusGetter(self))
         if not 'groups' in self._env['settings']:
             self._env['settings']['groups'] = ConfigDict()
         self._shuttingDown = False
@@ -58,23 +63,23 @@ class Daemon:
         if not self._opts.foreground:
             signal.signal(signal.SIGINT, self.handleSignal)
         self._slaves = {}
-        
+
     def handleSignal(self, sigNum, frame):
         if sigNum in SIG_VERBOSE:
             desc = SIG_VERBOSE[sigNum]['sigName']
         else:
             desc = 'unknown'
-        print >>sys.stderr, 'caught signal %d (%s), shutting down' % (sigNum, desc)
+        print >> sys.stderr, 'caught signal %d (%s), shutting down' % (sigNum, desc)
         try:
             self.shutdown()
-        except Exception, err:
-            print >>sys.stderr, 'caught exception during shutdown!'
+        except:  # pylint: disable=W0702
+            print >> sys.stderr, 'caught exception during shutdown!'
             errClass, errObj, errTB = sys.exc_info()[:3]
             traceback.print_tb(errTB)
-            print >>sys.stderr, '%s.%s: %s' % (errClass.__module__,
-                                               errClass.__name__,
-                                               str(errObj))
-            print >>sys.stderr, 'now doing a hard exit'
+            print >> sys.stderr, '%s.%s: %s' % (errClass.__module__,
+                                                errClass.__name__,
+                                                str(errObj))
+            print >> sys.stderr, 'now doing a hard exit'
             os._exit(-1)
 
     def shutdown(self):
@@ -83,12 +88,12 @@ class Daemon:
         else:
             self._shuttingDown = True
             if self.getNumRunningTasks():
-                print >>sys.stderr, 'stopping all tasks'
+                print >> sys.stderr, 'stopping all tasks'
                 for task in self.iterTasks():
                     if self.isLocalTask(task.name):
                         task.stop()
             else:
-                print >>sys.stderr, 'no running tasks'
+                print >> sys.stderr, 'no running tasks'
             self.cleanupChildren()
 
     def getTaskType(self, taskName):
@@ -133,27 +138,33 @@ class Daemon:
                     self._tasks[taskName] = newTask
             return self._tasks[taskName]
         else:
-            raise geocamPycroraptor.exceptions.UnknownTask(taskName)
+            raise geocamPycroraptor.errors.UnknownTask(taskName)
 
-    def expandGroup1(self, taskOrGroup, tabuList=[]):
+    def expandGroup1(self, taskOrGroup, tabuList=None):
+        if tabuList == None:
+            tabuList = []
         if taskOrGroup in tabuList:
-            raise geocamPycroraptor.exceptions.GroupContainsItself(taskOrGroup)
+            raise geocamPycroraptor.errors.GroupContainsItself(taskOrGroup)
         elif self.isGroup(taskOrGroup):
             return True, self._env['settings']['groups'][taskOrGroup]
         elif (self.isTask(taskOrGroup)
               or isinstance(taskOrGroup, (int, float))):
             return False, [taskOrGroup]
         else:
-            raise geocamPycroraptor.exceptions.UnknownTask(taskOrGroup)
+            raise geocamPycroraptor.errors.UnknownTask(taskOrGroup)
 
-    def expandGroup(self, taskOrGroup, tabuList=[]):
+    def expandGroup(self, taskOrGroup, tabuList=None):
+        if tabuList == None:
+            tabuList = []
         isExpanded, expansionResult = self.expandGroup1(taskOrGroup, tabuList)
         if isExpanded:
             return self.expandGroups(expansionResult, tabuList + [taskOrGroup])
         else:
             return expansionResult
 
-    def expandGroups(self, taskOrGroupList, tabuList=[]):
+    def expandGroups(self, taskOrGroupList, tabuList=None):
+        if tabuList == None:
+            tabuList = []
         return sum([self.expandGroup(t, tabuList) for t in taskOrGroupList], [])
 
     def getAllValidTasks(self):
@@ -180,7 +191,7 @@ class Daemon:
             daemonLevelHandler = getattr(self, daemonLevelName)
             return daemonLevelHandler(req)
         else:
-            raise geocamPycroraptor.exceptions.UnknownCommand('unknown command "%s"' % cmd)
+            raise geocamPycroraptor.errors.UnknownCommand('unknown command "%s"' % cmd)
 
     def dispatchCommandParse(self, conn, cmd):
         args = parseShellJson(cmd)
@@ -199,13 +210,13 @@ class Daemon:
         try:
             req, retVal = self.dispatchCommandParse(conn, cmd)
             return req, ['ok', retVal]
-        except:
+        except:  # pylint: disable=W0702
             errClass, errObject, errTB = sys.exc_info()[:3]
             traceback.print_tb(errTB)
-            print >>sys.stderr, ('%s.%s: %s' % (errClass.__module__,
+            print >> sys.stderr, ('%s.%s: %s' % (errClass.__module__,
                                                 errClass.__name__,
                                                 str(errObject)))
-            if isinstance(errObject, geocamPycroraptor.exceptions.PycroWarning):
+            if isinstance(errObject, geocamPycroraptor.errors.PycroWarning):
                 errLevel = 'warning'
             else:
                 errLevel = 'error'
@@ -229,7 +240,7 @@ class Daemon:
 
     def command_start(self, req):
         if self._shuttingDown:
-            raise geocamPycroraptor.exceptions.InvalidCommand("can't run tasks during shutdown")
+            raise geocamPycroraptor.errors.InvalidCommand("can't run tasks during shutdown")
         taskArgs = req.args[1:]
         if taskArgs and isinstance(taskArgs[-1], dict):
             params = taskArgs.pop(-1)
@@ -246,7 +257,7 @@ class Daemon:
                 msg = 'task %s already running' % tasks[0].name
             else:
                 msg = 'all tasks already running'
-            raise geocamPycroraptor.exceptions.NothingToDo(msg)
+            raise geocamPycroraptor.errors.NothingToDo(msg)
 
     def command_run(self, req):
         """run is an alias for start"""
@@ -269,7 +280,7 @@ class Daemon:
                 msg = 'task %s not running' % tasks[0].name
             else:
                 msg = 'all tasks already stopped'
-            raise geocamPycroraptor.exceptions.NothingToDo(msg)
+            raise geocamPycroraptor.errors.NothingToDo(msg)
 
     def command_kill(self, req):
         """kill is an alias for stop"""
@@ -310,7 +321,7 @@ class Daemon:
     def command_stdin(self, req):
         taskName, quotedText = req.args[1:]
         if not (isinstance(quotedText, (str, unicode)) and re.match('".*"', quotedText)):
-            raise geocamPycroraptor.exceptions.SyntaxError('<text> arg to stdin command must be a quoted string; instead got: %s' % quotedText)
+            raise geocamPycroraptor.errors.PycroSyntaxError('<text> arg to stdin command must be a quoted string; instead got: %s' % quotedText)
         text = quotedText[1:-1]
         self.getTask(taskName).writeStdin(text)
 
@@ -338,7 +349,7 @@ class Daemon:
 #
 """)
         return None
-        
+
     def commandSubStatus(self, req):
         tasks = self.getTasks(req.args[2:])
         for task in tasks:
@@ -349,7 +360,7 @@ class Daemon:
         if req.args[1] == 'status':
             return self.commandSubStatus(req)
         else:
-            raise geocamPycroraptor.exceptions.SyntaxError('expected "status" after "sub"')
+            raise geocamPycroraptor.errors.PycroSyntaxError('expected "status" after "sub"')
 
     def commandUnsubStatus(self, req):
         tasks = self.getTasks(req.args[2:])
@@ -361,7 +372,7 @@ class Daemon:
         if req.args[1] == 'status':
             return self.commandUnsubStatus(req)
         else:
-            raise geocamPycroraptor.exceptions.SyntaxError('expected "status" after "unsub"')
+            raise geocamPycroraptor.errors.PycroSyntaxError('expected "status" after "unsub"')
 
     def commandHandler(self, conn, cmd):
         if self._opts.logComm:
@@ -376,7 +387,7 @@ class Daemon:
         if self._opts.logComm:
             print 'response:', jsonResponse
         conn.write(jsonResponse + '\n')
-    
+
     def writeObject(self, conn, obj):
         conn.write(json.dumps(obj, cls=PycroEncoder) + '\n')
 
@@ -394,8 +405,8 @@ class Daemon:
                 self.finishShutdown()
 
     def finishShutdown(self):
-        print >>sys.stderr, 'all tasks stopped, exiting'
-        os._exit(0) # sys.exit would be caught in SharedScheduler
+        print >> sys.stderr, 'all tasks stopped, exiting'
+        os._exit(0)  # sys.exit would be caught in SharedScheduler
 
     def daemonize(self, logNameTemplate, pidFileName):
         os.chdir('/')
@@ -494,7 +505,7 @@ class Daemon:
                 procStatus = info['procStatus']
                 details = ' '.join(['%s=%s' % (k, info[k])
                                     for k in ('pid', 'sigName', 'sigVerbose', 'returnValue')
-                                    if info.has_key(k)])
+                                    if k in info])
 
                 if procStatus == 'errorExit':
                     color = 'red'
@@ -540,8 +551,8 @@ class Daemon:
     def start(self):
         logNameTemplate = self._opts.logFile
         if not self._opts.foreground:
-            self.daemonize(logNameTemplate = logNameTemplate,
-                           pidFileName = self._opts.pidFile)
+            self.daemonize(logNameTemplate=logNameTemplate,
+                           pidFileName=self._opts.pidFile)
 
         print ('\n\n--- pyraptord started at %s, pid %d ---\n'
                % (time.ctime(), os.getpid()))
@@ -552,9 +563,9 @@ class Daemon:
             print 'running tasks in startup group "%s"' % self._opts.startupGroup
             try:
                 startupTasks = self.expandGroup(self._opts.startupGroup)
-            except geocamPycroraptor.exceptions.UnknownTask, err:
-                print >>sys.stderr, ('could not run startup group "%s": %s'
-                                     % (self._opts.startupGroup, err))
+            except geocamPycroraptor.errors.UnknownTask, err:
+                print >> sys.stderr, ('could not run startup group "%s": %s'
+                                      % (self._opts.startupGroup, err))
             else:
                 print 'startup tasks are: %s' % str(startupTasks)
                 for taskName in startupTasks:
@@ -593,12 +604,12 @@ class Daemon:
                                     lineHandler=self.commandHandler)
         if self._opts.notificationService:
             self._dispatcher.findServices(self._opts.notificationService,
-                                          announceServices = [moduleName])
+                                          announceServices=[moduleName])
 
-        scheduler.enterPeriodic(period = CLEANUP_PERIOD,
-                                action = self.cleanupChildren)
-        scheduler.enterPeriodic(period = WRITE_STATUS_PERIOD,
-                                action = self.writeStatus)
+        scheduler.enterPeriodic(period=CLEANUP_PERIOD,
+                                action=self.cleanupChildren)
+        scheduler.enterPeriodic(period=WRITE_STATUS_PERIOD,
+                                action=self.writeStatus)
         scheduler.runForever()
 
     def stop(self, pid):
@@ -631,7 +642,7 @@ class Daemon:
             print status
 
     def userRestart(self):
-        pid, status = self.getStatus()
+        pid, _status = self.getStatus()
         if pid > 0:
             stopped = self.stop(pid)
             if stopped:
@@ -640,7 +651,7 @@ class Daemon:
         self.start()
 
     def userStatus(self):
-        pid, status = self.getStatus()
+        _pid, status = self.getStatus()
         print status
 
     def runx(self, cmd):
@@ -648,7 +659,7 @@ class Daemon:
         try:
             cmdFunc = getattr(self, cmdFuncName)
         except AttributeError:
-            print >>sys.stderr, 'ERROR: unknown command %s' % cmd
+            print >> sys.stderr, 'ERROR: unknown command %s' % cmd
         cmdFunc()
 
     @staticmethod

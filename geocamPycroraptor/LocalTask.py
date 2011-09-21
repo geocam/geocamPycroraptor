@@ -10,11 +10,8 @@ import subprocess
 import time
 import pty
 import signal
-import re
 import shlex
 import errno
-
-from geocamPycroCom.SharedScheduler import scheduler
 
 from geocamPycroraptor.ExpandVariables import expandVal
 from geocamPycroraptor import Log
@@ -23,18 +20,26 @@ from geocamPycroraptor.signals import SIG_VERBOSE
 from geocamPycroraptor.BaseTask import BaseTask
 from geocamPycroraptor import anyjson as json
 
+
 class LocalTask(BaseTask):
     def __init__(self, name, parent):
         super(LocalTask, self).__init__(name, parent)
-        self.status = dict(status = 'notStarted', procStatus = 'notStarted', params = {})
+        self.status = dict(status='notStarted', procStatus='notStarted', params={})
         self._proc = None
         self._pendingRestart = False
+        self._pendingRestartParams = None
         self._doomsday = None
         self._childStdout = None
         self._env['name'] = self.name
         self._outLogger = None
         self._errLogger = None
         self._tslineLogger = None
+        self.stdin = None
+        self._logFile = None
+        self._params = None
+        self._childStdout = None
+        self._childStderr = None
+        self._logBuffer = None
 
     def setStatus(self, status):
         super(LocalTask, self).setStatus(status)
@@ -63,10 +68,10 @@ class LocalTask(BaseTask):
         cmdArgs = shlex.split(cmd)
         devNull = file('/dev/null', 'r')
         child = subprocess.Popen(cmdArgs,
-                                 stdin = devNull,
-                                 stdout = subprocess.PIPE,
-                                 stderr = subprocess.STDOUT,
-                                 close_fds = True)
+                                 stdin=devNull,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 close_fds=True)
         stdout = child.communicate()
         if child.returncode != 0:
             argsString = ['"%s"' % arg for arg in cmdArgs]
@@ -82,8 +87,8 @@ class LocalTask(BaseTask):
     def _checkForDoomsday(self):
         if self._proc and self._doomsday and time.time() > self._doomsday:
             stopBackupCmd = self._getConfig('stopBackupCmd')
-            self._logText(['stopBackup', dict(source = 'unknown',
-                                              cmd = shlex.split(stopBackupCmd))])
+            self._logText(['stopBackup', dict(source='unknown',
+                                              cmd=shlex.split(stopBackupCmd))])
             self._runCmd(stopBackupCmd)
             self._doomsday = None
 
@@ -111,30 +116,30 @@ class LocalTask(BaseTask):
                     status0 = 'aborted'
                 else:
                     status0 = 'failed'
-                newStatus = dict(status = status0,
-                                 procStatus = 'signalExit',
-                                 sigNum = sigNum,
-                                 params = self._params)
+                newStatus = dict(status=status0,
+                                 procStatus='signalExit',
+                                 sigNum=sigNum,
+                                 params=self._params)
                 if sigNum in SIG_VERBOSE:
                     newStatus.update(SIG_VERBOSE[sigNum])
             elif self._proc.returncode > 0:
-                newStatus = dict(status = 'failed',
-                                 procStatus = 'errorExit',
-                                 returnValue = self._proc.returncode,
-                                 params = self._params)
+                newStatus = dict(status='failed',
+                                 procStatus='errorExit',
+                                 returnValue=self._proc.returncode,
+                                 params=self._params)
             else:
-                newStatus = dict(status = 'success',
-                                 procStatus = 'cleanExit',
-                                 returnValue = 0,
-                                 params = self._params)
+                newStatus = dict(status='success',
+                                 procStatus='cleanExit',
+                                 returnValue=0,
+                                 params=self._params)
             self.setStatus(newStatus)
             self._postExitCleanup()
 
     def _openpty(self):
         try:
             readFd, writeFd = pty.openpty()
-        except:
-            print >>sys.stderr, 'WARNING: pty.openpty() failed, falling back to os.pipe(), may affect output buffering'
+        except:  # pylint: disable=W0702
+            print >> sys.stderr, 'WARNING: pty.openpty() failed, falling back to os.pipe(), may affect output buffering'
             readFd, writeFd = os.pipe()
         return readFd, writeFd
 
@@ -142,10 +147,12 @@ class LocalTask(BaseTask):
     # functions to be called from client
     ######################################################################
 
-    def start0(self, params={}, restart=0):
+    def start0(self, params=None, restart=0):
+        if params == None:
+            params = {}
         self._params = params
         for k, v in params.iteritems():
-            self._env[k] = v # may want to remove these later
+            self._env[k] = v  # may want to remove these later
 
         # without str() call, getConfig result is unicode in Python 2.7
         # and shlex.split fails
@@ -155,7 +162,7 @@ class LocalTask(BaseTask):
         if self._env['log'] == None:
             self._logFile = None
         else:
-            logFileName, self._logFile = Log.openLogFromTemplate(self._env['log'], self._env)
+            _logFileName, self._logFile = Log.openLogFromTemplate(self._env['log'], self._env)
             self._tslineLogger = Log.TimestampLineLogger(self._logFile)
             self._logBuffer.addLineHandler(self._tslineLogger.handleLine)
         self._outLogger = Log.TimestampLineParser('out', self._logBuffer.handleLine)
@@ -163,7 +170,7 @@ class LocalTask(BaseTask):
         os.chdir(self._getConfig('workingDir'))
         childStdoutReadFd, childStdoutWriteFd = self._openpty()
         self._childStdout = Stdout(childStdoutReadFd, self._outLogger, self, 'stdout')
-        os.close(childStdoutReadFd) # close redundant fd after it is dup()'d by Stdout()
+        os.close(childStdoutReadFd)  # close redundant fd after it is dup()'d by Stdout()
         childStderrReadFd, childStderrWriteFd = self._openpty()
         self._childStderr = Stdout(childStderrReadFd, self._errLogger, self, 'stderr')
         os.close(childStderrReadFd)
@@ -174,7 +181,7 @@ class LocalTask(BaseTask):
         childEnv = os.environ.copy()
         for k, v in self._getConfig('env').iteritems():
             if v == None:
-                if childEnv.has_key(k):
+                if k in childEnv:
                     del childEnv[k]
             else:
                 childEnv[k] = v
@@ -182,15 +189,15 @@ class LocalTask(BaseTask):
             logName = 'restart.start'
         else:
             logName = 'start'
-        self._logText([logName, dict(source = 'unknown',
-                                     cmd = cmdArgs)])
+        self._logText([logName, dict(source='unknown',
+                                     cmd=cmdArgs)])
         try:
             self._proc = subprocess.Popen(cmdArgs,
-                                          stdin = subprocess.PIPE,
-                                          stdout = childStdoutWriteFd,
-                                          stderr = childStderrWriteFd,
-                                          env = childEnv,
-                                          close_fds = True)
+                                          stdin=subprocess.PIPE,
+                                          stdout=childStdoutWriteFd,
+                                          stderr=childStderrWriteFd,
+                                          env=childEnv,
+                                          close_fds=True)
         except OSError, oe:
             if oe.errno == errno.ENOENT:
                 startupError = "is executable '%s' in PATH? Popen call returned no such file or directory" % cmdArgs[0]
@@ -210,10 +217,10 @@ class LocalTask(BaseTask):
             self._postExitCleanup()
         else:
             self.stdin = self._proc.stdin
-            self.setStatus(dict(status = 'running',
-                                procStatus = 'running',
-                                pid = self._proc.pid,
-                                params = self._params))
+            self.setStatus(dict(status='running',
+                                procStatus='running',
+                                pid=self._proc.pid,
+                                params=self._params))
 
     def stop0(self, restart=0):
         stopCmd = self._getConfig('stopCmd')
@@ -221,12 +228,14 @@ class LocalTask(BaseTask):
             logName = 'restart.stop'
         else:
             logName = 'stop'
-        self._logText([logName, dict(source = 'unknown',
-                                     cmd = shlex.split(stopCmd))])
+        self._logText([logName, dict(source='unknown',
+                                     cmd=shlex.split(stopCmd))])
         self._runCmd(stopCmd)
         self._doomsday = time.time() + self._getConfig('stopBackupDelay')
 
-    def restart(self, params={}):
+    def restart(self, params=None):
+        if params == None:
+            params = {}
         statusWas = 'was' + self.status['status'].capitalize()
         if statusWas == 'wasRunning':
             self.stop0(restart=1)
@@ -240,9 +249,9 @@ class LocalTask(BaseTask):
         return self.status
 
     def writeStdin(self, text):
-        self._logText(['stdin', dict(source = 'unknown',
-                                     text = text)])
-        self.stdin.write(text+'\n')
+        self._logText(['stdin', dict(source='unknown',
+                                     text=text)])
+        self.stdin.write(text + '\n')
         self.stdin.flush()
 
     ######################################################################
@@ -252,5 +261,3 @@ class LocalTask(BaseTask):
     def cleanup(self):
         self._checkForExit()
         self._checkForDoomsday()
-        
-        

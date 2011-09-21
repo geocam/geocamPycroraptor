@@ -4,10 +4,12 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.shortcuts import render_to_response
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
-from django.template import RequestContext
-from django.utils.translation import ugettext, ugettext_lazy as _
+# from django.shortcuts import render_to_response
+from django.http import HttpResponse
+# from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
+# from django.template import RequestContext
+# from django.utils.translation import ugettext, ugettext_lazy as _
+
 
 def index(request):
     return HttpResponse('hello geocamPycroraptor!')

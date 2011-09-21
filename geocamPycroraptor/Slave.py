@@ -10,8 +10,10 @@ from geocamPycroraptor.Printable import Printable
 from geocamPycroraptor.PycroEncoder import PycroEncoder
 from geocamPycroraptor import anyjson as json
 
+
 class Slave(Printable):
     def __init__(self, name, endpoint, dispatcher, logComm=True, statusHandler=None):
+        # pylint: disable=W0231
         self.name = name
         self.endpoint = endpoint
         self.dispatcher = dispatcher
@@ -47,10 +49,10 @@ class Slave(Printable):
             _, taskName, status = cmd
             self.handleStatus(taskName, status)
         else:
-            pass # nothing to do for other message types yet
-        
+            pass  # nothing to do for other message types yet
+
     def handleStatus(self, taskName, status):
         if self.statusHandler:
             self.statusHandler(self, taskName, status)
         else:
-            pass # no default action
+            pass  # no default action

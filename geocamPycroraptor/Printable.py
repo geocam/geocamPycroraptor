@@ -4,6 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
+
 class Printable(object):
     """If x is an instance of a class inheriting from Printable, 'repr(x)'
     and 'print x' give useful debug output.  Idea similar to Perl Data::Dumper."""
@@ -15,7 +16,9 @@ class Printable(object):
                                  self.getPrefix(),
                                  ', '.join(['%s=%s' % (k, repr(v))
                                             for k, v in svars])))
+
     def getPrefix(self):
         return ''
+
     def __repr__(self):
         return self.getPrintable()

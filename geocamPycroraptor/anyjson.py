@@ -11,6 +11,9 @@ support.  Recommended usage:
 from geocamPycroraptor import anyjson as json
 """
 
+# tell pylint these wildcard imports are ok
+# pylint: disable=W0401
+
 try:
     # user explicitly installed some version of json module,
     # prefer their version

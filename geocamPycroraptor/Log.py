@@ -11,15 +11,18 @@ from geocamPycroraptor.ExpandVariables import expandVal
 
 UNIQUE_REGEX = r'\$\{unique\}|\$unique\b'
 
+
 def getFileNameTimeString(timestamp=None):
     if timestamp == None:
         timestamp = datetime.datetime.now()
     return timestamp.strftime('%Y-%m-%d-%H%M%S')
 
+
 def getTimeString(timestamp=None):
     if timestamp == None:
         timestamp = datetime.datetime.now()
     return timestamp.isoformat()
+
 
 def openLogFromFileName(fname, mode='a+'):
     logDir = os.path.dirname(fname)
@@ -28,9 +31,11 @@ def openLogFromFileName(fname, mode='a+'):
     logFile = file(fname, mode, 0)
     return logFile
 
+
 def _expandUniq(fname, counterStr, env):
     fnameWithUniq = re.sub(UNIQUE_REGEX, counterStr, fname)
     return expandVal(fnameWithUniq, env)
+
 
 def _forceSymLink(src, target):
     if os.path.lexists(target):
@@ -48,6 +53,7 @@ def _forceSymLink(src, target):
         raise OSError('%s [in symlink "%s" "%s"]'
                       % (str(err), src, target))
 
+
 def _findUniqueFileAndSetSymLink(fnameTemplate, env):
     if re.search(UNIQUE_REGEX, fnameTemplate):
         for i in xrange(0, 10000):
@@ -62,9 +68,11 @@ def _findUniqueFileAndSetSymLink(fnameTemplate, env):
     else:
         return expandVal(fnameTemplate, env)
 
+
 def openLogFromTemplate(fnameTemplate, env):
     fname = _findUniqueFileAndSetSymLink(fnameTemplate, env)
     return (fname, openLogFromFileName(fname))
+
 
 class TimestampLine:
     def __init__(self, streamName, lineType, text, timestamp=None):
@@ -75,25 +83,30 @@ class TimestampLine:
         self.text = text
         self.timestamp = timestamp
 
+
 class LineSource(object):
     def __init__(self, lineHandler=None):
         self._lineHandlers = {}
         self._lineHandlerCount = 0
         if lineHandler:
             self.addLineHandler(lineHandler)
+
     def addLineHandler(self, handler):
         handlerRef = self._lineHandlerCount
         self._lineHandlerCount += 1
         self._lineHandlers[handlerRef] = handler
         return handlerRef
+
     def delLineHandler(self, handlerRef):
         del self._lineHandlers[handlerRef]
+
     def handleLine(self, tsline):
         for hnd in self._lineHandlers.itervalues():
             hnd(tsline)
 
+
 class TimestampLineParser(LineSource):
-    def __init__(self, streamName, lineHandler = None, maxLength=None):
+    def __init__(self, streamName, lineHandler=None, maxLength=None):
         if maxLength == None:
             maxLength = 160
         LineSource.__init__(self, lineHandler)
@@ -102,9 +115,11 @@ class TimestampLineParser(LineSource):
         self._ibuffer = []
         self._buflen = 0
         self._lastLineType = None
+
     def collect_incoming_data(self, text):
         self._ibuffer += text
         self._buflen += len(text)
+
     def found_terminator(self, terminator):
         if terminator == '\r\n' or terminator == '\n':
             lineType = 'n'
@@ -118,6 +133,7 @@ class TimestampLineParser(LineSource):
             self.handleLine(TimestampLine(self._streamName, lineType, text))
         self._ibuffer = ''
         self._buflen = 0
+
     def write(self, text):
         while len(text) > 0:
             spaceRemaining = self._maxLength - self._buflen
@@ -127,9 +143,11 @@ class TimestampLineParser(LineSource):
             else:
                 startOfNextSegmentIndex = self._write0(text)
             text = text[startOfNextSegmentIndex:]
+
     def flush(self):
         if self._buflen > 0:
             self.found_terminator(None)
+
     def _write0(self, text):
         m = re.search('(\r\n)|\r|\n', text)
         if m:
@@ -143,12 +161,14 @@ class TimestampLineParser(LineSource):
             startOfNextSegmentIndex = len(text)
         return startOfNextSegmentIndex
 
+
 class LineBuffer(LineSource):
     def __init__(self, lineHandler=None, maxSize=2048):
         LineSource.__init__(self, lineHandler)
         self._maxSize = maxSize
         self._lines = []
         self._lineCount = 0
+
     def addLine(self, tsline):
         DELETE_SIZE = self._maxSize // 2
         if len(self._lines) == self._maxSize - DELETE_SIZE:
@@ -157,26 +177,31 @@ class LineBuffer(LineSource):
         self._lines.append(tsline)
         self._lineCount += 1
         self.handleLine(tsline)
+
     def getLines(self, minTime=None, maxLines=None):
         n = len(self._lines)
         if minTime:
             minIndex = n
             for i in reversed(xrange(0, n)):
+                line = self._lines[i]
                 if line.timestamp < minTime:
-                    minIndex = i+1
+                    minIndex = i + 1
                     break
         else:
             minIndex = 0
         if maxLines:
-            minIndex = max(minIndex, n-maxLines)
+            minIndex = max(minIndex, n - maxLines)
         return self._lines[minIndex:]
+
 
 class TimestampLineLogger:
     def __init__(self, stream):
         self._stream = stream
+
     def handleLine(self, tsline):
         self._stream.write('%s %s %s %s\n' % (tsline.streamName, tsline.lineType,
                                               getTimeString(tsline.timestamp), tsline.text))
+
 
 class StreamLogger(TimestampLineParser):
     def __init__(self, streamName, stream, maxLength=None):

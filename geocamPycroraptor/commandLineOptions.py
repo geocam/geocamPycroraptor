@@ -4,7 +4,9 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import os, optparse, imp
+import os
+import optparse
+import imp
 import re
 import platform
 from geocamPycroraptor import settings
@@ -12,12 +14,14 @@ from geocamPycroraptor import settings
 DEFAULT_SETTINGS_FILE = os.environ.get('PYCRORAPTOR_SETTINGS_FILE', None)
 DEFAULT_ENDPOINT = os.environ.get('PYCRORAPTOR_ENDPOINT', 'tcp:localhost:8085')
 
+
 def commaSplit(option, opt, value, parser):
     if value:
         elts = value.split(',')
     else:
         elts = []
     setattr(parser.values, option.dest, elts)
+
 
 def getOptParser():
     parser = optparse.OptionParser()
@@ -32,12 +36,14 @@ def getOptParser():
                       help='Endpoint for CORBA naming service [%default]')
     return parser
 
+
 def readSettings(settingsFileName):
     if not os.path.lexists(settingsFileName):
         raise IOError('settings file "%s" does not exist' % settingsFileName)
     userSettings = imp.load_source('geocamPycroraptor.userSettings', settingsFileName)
     for k, v in vars(userSettings).iteritems():
         setattr(settings, k, v)
+
 
 def getClientOptsArgs(argv):
     parser = getOptParser()
@@ -51,10 +57,11 @@ def getClientOptsArgs(argv):
                       callback=commaSplit, dest='daemons',
                       help=('Comma-separated list of pyraptord endpoints to connect to [%s]'
                             % DEFAULT_ENDPOINT))
-    opts, args = parser.parse_args(args = argv[1:])
+    opts, args = parser.parse_args(args=argv[1:])
     if opts.settings:
         readSettings(opts.settings)
     return opts, args
+
 
 def getDaemonOptsArgs(argv):
     parser = getOptParser()
@@ -89,7 +96,7 @@ def getDaemonOptsArgs(argv):
     parser.add_option('--foreground',
                       default=False, action='store_true',
                       help='If set, do not daemonize')
-    opts, args = parser.parse_args(args = argv[1:])
+    opts, args = parser.parse_args(args=argv[1:])
     if opts.settings:
         readSettings(opts.settings)
     if opts.pidFile == 'from settings':

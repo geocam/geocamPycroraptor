@@ -4,12 +4,8 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-import os
-import sys
-
-from geocamPycroraptor.Printable import Printable
-from geocamPycroraptor.SubscriberSet import SubscriberSet
 from geocamPycroraptor.BaseTask import BaseTask
+
 
 class RemoteTask(BaseTask):
     def __init__(self, name, parent, slave):
@@ -24,13 +20,17 @@ class RemoteTask(BaseTask):
     # functions to be called from client
     ######################################################################
 
-    def start0(self, params={}):
+    def start0(self, params=None):
+        if params == None:
+            params = {}
         self._slave.writeObject(['start', self.name, params])
 
     def stop0(self):
         self._slave.writeObject(['stop', self.name])
-    
-    def restart(self, params={}):
+
+    def restart(self, params=None):
+        if params == None:
+            params = {}
         statusWas = 'was' + self.status['status'].capitalize()
         self._slave.writeObject(['restart', self.name])
         return statusWas

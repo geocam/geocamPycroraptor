@@ -5,10 +5,11 @@
 # __END_LICENSE__
 
 import re
-import geocamPycroraptor.exceptions
+import geocamPycroraptor.errors
 from geocamPycroraptor import anyjson as json
 
 JSON_RESERVED_WORDS = dict.fromkeys(['null'])
+
 
 def trisplit(s):
     match = re.search('^([^\s]+)(\s+)([^\s].*)$', s)
@@ -17,9 +18,11 @@ def trisplit(s):
     else:
         return s, '', ''
 
+
 def isIdentifier(s):
     return (re.search('^-?[a-zA-Z][a-zA-Z_0-9\.]*$', s)
             and s not in JSON_RESERVED_WORDS)
+
 
 def parseTerm(s):
     if isIdentifier(s):
@@ -28,12 +31,13 @@ def parseTerm(s):
         try:
             obj = json.loads(s)
         except ValueError, err:
-            raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
+            raise geocamPycroraptor.errors.PycroSyntaxError(*err.args)
         else:
             if isinstance(obj, (str, unicode)):
                 # quote the string to retain distinction with bareword
                 obj = '"%s"' % obj
             return obj
+
 
 def parseShellJsonShell(cmd):
     parsedCmd = []
@@ -42,7 +46,7 @@ def parseShellJsonShell(cmd):
         while True:
             try:
                 parsedHead = parseTerm(head)
-            except geocamPycroraptor.exceptions.SyntaxError:
+            except geocamPycroraptor.errors.PycroSyntaxError:
                 if cmd:
                     head2, wspace2, cmd = trisplit(cmd)
                     head = head + wspace + head2
@@ -54,11 +58,13 @@ def parseShellJsonShell(cmd):
                 break
     return parsedCmd
 
+
 def parseShellJsonStrict(cmd):
     try:
         return json.loads(cmd)
     except ValueError, err:
-        raise geocamPycroraptor.exceptions.SyntaxError(*err.args)
+        raise geocamPycroraptor.errors.PycroSyntaxError(*err.args)
+
 
 def parseShellJson(cmd):
     cmd = cmd.strip()
@@ -78,7 +84,7 @@ if __name__ == "__main__":
     print parseShellJson('kill -a')
     try:
         print parseShellJson('foo {"zoo":')
-    except geocamPycroraptor.exceptions.SyntaxError:
+    except geocamPycroraptor.errors.PycroSyntaxError:
         print 'last call raised error as expected'
     else:
         print 'oops, how did that parse?'
